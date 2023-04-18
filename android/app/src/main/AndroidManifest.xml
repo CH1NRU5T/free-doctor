@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chinrust.freedoctor.free_doctor">
+    <uses-permission android:name="android.permission.INTERNET" />
    <application
         android:label="free_doctor"
         android:name="${applicationName}"
