@@ -2,9 +2,10 @@
 
 import 'dart:io';
 
-import 'package:better_player/better_player.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 class Gridbox extends StatefulWidget {
@@ -15,26 +16,19 @@ class Gridbox extends StatefulWidget {
 }
 
 class _GridboxState extends State<Gridbox> {
-  BetterPlayerController? _controller;
-  Future<void> _initVideoPlayer() async {
-    BetterPlayerDataSource betterPlayerDataSource = BetterPlayerDataSource(
-      BetterPlayerDataSourceType.network,
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+  ChewieController? _chewieController;
+
+  Future<void> initVideoPlayerController() async {
+    VideoPlayerController videoPlayerController = VideoPlayerController.network(
+        'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4');
+    await videoPlayerController.initialize();
+    _chewieController = ChewieController(
+      hideControlsTimer: const Duration(seconds: 2),
+      videoPlayerController: videoPlayerController,
+      aspectRatio: 16 / 9,
+      autoPlay: true,
+      showControlsOnInitialize: false,
     );
-
-    _controller = BetterPlayerController(
-        const BetterPlayerConfiguration(
-            autoPlay: true,
-            showPlaceholderUntilPlay: true,
-            autoDispose: true,
-            aspectRatio: 16 / 9,
-            fit: BoxFit.cover,
-            controlsConfiguration: BetterPlayerControlsConfiguration(
-              showControlsOnInitialize: false,
-            )),
-        betterPlayerDataSource: betterPlayerDataSource);
-
-    setState(() {});
   }
 
   @override
@@ -44,6 +38,11 @@ class _GridboxState extends State<Gridbox> {
   }
 
   String? file;
+  @override
+  void dispose() {
+    _chewieController?.dispose();
+    super.dispose();
+  }
 
   getf() async {
     final fileName = await VideoThumbnail.thumbnailFile(
@@ -60,20 +59,20 @@ class _GridboxState extends State<Gridbox> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        await _initVideoPlayer();
-
-        showDialog(
+        await initVideoPlayerController();
+        await showDialog(
           context: context,
           builder: (context) {
             return Dialog(
+              backgroundColor: Colors.transparent,
               child: SizedBox(
-                height: 150,
+                height: 200,
                 child: AspectRatio(
-                  aspectRatio: _controller!.getAspectRatio()!,
+                  aspectRatio: 16 / 9,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: BetterPlayer(
-                      controller: _controller!,
+                    child: Chewie(
+                      controller: _chewieController!,
                     ),
                   ),
                 ),
@@ -81,6 +80,7 @@ class _GridboxState extends State<Gridbox> {
             );
           },
         );
+        _chewieController!.pause();
       },
       child: Container(
         margin: const EdgeInsets.all(10),
